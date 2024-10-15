@@ -2,19 +2,19 @@ use datetime::Instant;
 use std::collections::VecDeque;
 
 #[derive(Debug)]
-struct TimewiseDeque<T> {
+pub struct TimewiseDeque<T> {
     queue: VecDeque<(Instant, T)>,
 }
 
 impl<T> TimewiseDeque<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             queue: VecDeque::new(),
         }
     }
 
     /// Adds a new item to the queue. Must be newer than all previously added items.
-    fn add_item(&mut self, timestamp: Instant, item: T) {
+    pub fn add_item(&mut self, timestamp: Instant, item: T) {
         if !self.queue.is_empty() {
             assert!(
                 self.queue.back().unwrap().0 <= timestamp,
@@ -26,20 +26,26 @@ impl<T> TimewiseDeque<T> {
     }
 
     /// Deletes all items before the specified time.
-    fn prune_before(&mut self, timestamp: &Instant) {
+    pub fn prune_before(&mut self, timestamp: &Instant) {
         while self.queue.front().is_some_and(|(t, _)| t < timestamp) {
             self.queue.pop_front();
         }
     }
 
     /// Returns an iterator over items since the given timestamp
-    fn fetch_items_since(&self, timestamp: Instant) -> impl Iterator<Item = &(Instant, T)> {
+    pub fn fetch_items_since(&self, timestamp: Instant) -> impl Iterator<Item = &(Instant, T)> {
         let slices = self.queue.as_slices();
         slices
             .0
             .iter()
             .chain(slices.1)
             .skip_while(move |(t, _)| t < &timestamp)
+    }
+}
+
+impl<T> Default for TimewiseDeque<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
