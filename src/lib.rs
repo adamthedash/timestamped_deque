@@ -34,12 +34,8 @@ impl<T> TimewiseDeque<T> {
 
     /// Returns an iterator over items since the given timestamp
     pub fn fetch_items_since(&self, timestamp: Instant) -> impl Iterator<Item = &(Instant, T)> {
-        let slices = self.queue.as_slices();
-        slices
-            .0
-            .iter()
-            .chain(slices.1)
-            .skip_while(move |(t, _)| t < &timestamp)
+        let (s1, s2) = self.queue.as_slices();
+        s1.iter().chain(s2).skip_while(move |(t, _)| t < &timestamp)
     }
 }
 
@@ -51,7 +47,7 @@ impl<T> Default for TimewiseDeque<T> {
 
 #[cfg(test)]
 mod tests {
-    use datetime::Instant;
+    use datetime::{Duration, Instant};
 
     use crate::TimewiseDeque;
 
@@ -82,5 +78,10 @@ mod tests {
         for item in queue.fetch_items_since(now) {
             println!("{:?}", item)
         }
+
+        let sum = queue
+            .fetch_items_since(now - Duration::of_ms(10, 0))
+            .fold(0, |acc, (t, event)| acc + event.val);
+        println!("{sum}")
     }
 }
